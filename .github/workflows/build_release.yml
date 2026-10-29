@@ -1,35 +1,32 @@
+name: Build Boon Table (cloud)
 on:
   push:
-    tags:
-      - '**'
+    branches: [ master ]
+  workflow_dispatch: # 手动触发开关
 
 jobs:
   build:
-    runs-on: windows-2025-vs2026
-
+    runs-on: windows-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - name: Set up MSVC dev environment
+      - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Configure
-        run: cmake --preset release-windows
+      - name: Configure CMake
+        run: >
+          cmake -S . -B build
+          --preset=windows
+          -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build --preset release-windows
+        run: cmake --build build --preset=windows
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v6
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: release-windows
-          path: |
-            cmake-build/*/*.dll
-            cmake-build/*/*.pdb
-
-      - name: Create draft release
-        uses: softprops/action-gh-release@v3
-        with:
-          draft: true
-          files: cmake-build/*/*.dll
+          name: boontable-release
+          path: build/d3d9_arcdps_table.dll
